@@ -65,7 +65,22 @@ here you can see all the implemented endpoints and try them out
 
 Create a User to be able to view and create Tasks
 
-After creating a User, authorize the enpoints clicking the "Authorize" button on the top left of the page
+![Expand the register endpoint and click Try it out](doc_images/create_user1.png)
+Expand the register endpoint and click Try it out
+
+![Fill in the request Body and click execute](doc_images/create_user2.png)
+Fill in the request Body and click execute
+
+After creating a User, authorize the endpoints clicking the "Authorize" button on the top left of the page
+
+![Click Authorize and fill in the user you just created](doc_images/check_tasks1.png)
+Click Authorize and fill in the user you just created
+
+![Expand the GET task endpoint](doc_images/check_tasks2.png)
+Expand the GET task endpoint
+
+![Click Execute and see the list of saved notes (you should see an empty list if you have not created any)](doc_images/check_tasks3.png)
+Click Execute and see the list of saved notes (you should see an empty list if you have not created any)
 
 Remember that every time you run the app, the thread to delete completed Tasks run, so if you don't want to wait you can stop and run the app again to see the behavior
 
