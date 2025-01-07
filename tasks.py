@@ -1,4 +1,4 @@
-from typing import Annotated
+from typing import Annotated, Optional
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
@@ -26,14 +26,20 @@ db_dependency = Annotated[Session, Depends(get_db)]
 user_dependency = Annotated[dict, Depends(get_current_user)]
 
 
-@router.get("/tasks")
-async def get_user_tasks(user: user_dependency, db: db_dependency):
+def get_user_from_db(user: Optional[dict], db: Session) -> User:
     if not user:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Not logged in")
     user_db = db.query(User).filter(User.id == user.get("id")).first()
 
     if not user_db:
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="User not found in DB")
+
+    return user_db
+
+
+@router.get("/tasks")
+async def get_user_tasks(user: user_dependency, db: db_dependency):
+    user_db = get_user_from_db(user, db)
 
     return user_db.tasks
 
@@ -42,12 +48,7 @@ async def get_user_tasks(user: user_dependency, db: db_dependency):
 async def add_user_task(
     user: user_dependency, db: db_dependency, create_task_request: CreateTaskRequest
 ):
-    if not user:
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, detail="Not logged in")
-    user_db = db.query(User).filter(User.id == user.get("id")).first()
-
-    if not user_db:
-        raise HTTPException(status.HTTP_404_NOT_FOUND, detail="User not found in DB")
+    user_db = get_user_from_db(user, db)
 
     task_model = Task(
         title=create_task_request.title,
