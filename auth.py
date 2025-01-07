@@ -1,6 +1,7 @@
 from datetime import timedelta
 from datetime import datetime, timezone
 from typing import Annotated, Optional
+from jose.exceptions import JWTError
 from pydantic import BaseModel
 from fastapi import APIRouter, Depends, HTTPException, status
 from passlib.context import CryptContext
@@ -19,7 +20,7 @@ SECRET_KEY = "01f1e1ec19d4796fb38f6424cc653cd094b574ebf64277487bde4c846b28a8d424
 ALGORITHM = "HS256"
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_bearer = OAuth2PasswordBearer(tokenUrl="auth/token")
+oauth2_bearer = OAuth2PasswordBearer(tokenUrl="/login")
 
 
 class CreateUserRequest(BaseModel):
@@ -91,3 +92,21 @@ def create_access_token(email: str, user_id: int, expires_delta: timedelta) -> s
     }
 
     return jwt.encode(encode, SECRET_KEY, algorithm=ALGORITHM)
+
+
+async def get_current_user(token: Annotated[str, Depends(oauth2_bearer)]):
+    try:
+        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        email: str = payload.get("sub")
+        user_id: int = payload.get("id")
+        if not email or not user_id:
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not vvalidate User.",
+            )
+        return {"email": email, "id": user_id}
+
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Could not vvalidate User."
+        )

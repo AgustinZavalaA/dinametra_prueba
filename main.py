@@ -4,20 +4,13 @@ import uvicorn
 import auth
 from database import engine
 import models
+import tasks
 
 app = FastAPI()
 app.include_router(auth.router)
+app.include_router(tasks.router)
+# models.Base.metadata.drop_all(engine) # only uncomment this if you dont care about the data in the db or if encounter a db issue
 models.Base.metadata.create_all(bind=engine)
-
-
-@app.get("/tasks")
-async def user_tasks():
-    pass
-
-
-@app.post("/tasks")
-async def register_task():
-    pass
 
 
 def main() -> None:
