@@ -23,7 +23,7 @@ oauth2_bearer = OAuth2PasswordBearer(tokenUrl="auth/token")
 
 
 class CreateUserRequest(BaseModel):
-    username: str
+    email: str
     password: str
 
 
@@ -45,7 +45,7 @@ db_dependency = Annotated[Session, Depends(get_db)]
 @router.post("/register", status_code=status.HTTP_201_CREATED)
 async def create_user(db: db_dependency, create_user_request: CreateUserRequest):
     create_user_model = User(
-        username=create_user_request.username,
+        email=create_user_request.email,
         hashed_password=bcrypt_context.hash(create_user_request.password),
     )
 
@@ -64,16 +64,16 @@ async def login_for_access_token(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Password does not match"
         )
 
-    token = create_access_token(user.username, user.id, timedelta(minutes=10))
+    token = create_access_token(user.email, user.id, timedelta(minutes=10))
 
     return {"access_token": token, "token_type": "bearer"}
 
 
-def authenticate_user(username: str, password: str, db: Session) -> Optional[User]:
-    user = db.query(User).filter(User.username == username).first()
+def authenticate_user(email: str, password: str, db: Session) -> Optional[User]:
+    user = db.query(User).filter(User.email == email).first()
     if not user:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Username not found"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Email not found"
         )
     if not bcrypt_context.verify(password, user.hashed_password):
         raise HTTPException(
@@ -83,9 +83,9 @@ def authenticate_user(username: str, password: str, db: Session) -> Optional[Use
     return user
 
 
-def create_access_token(username: str, user_id: int, expires_delta: timedelta) -> str:
+def create_access_token(email: str, user_id: int, expires_delta: timedelta) -> str:
     encode = {
-        "sub": username,
+        "sub": email,
         "id": user_id,
         "exp": datetime.now(timezone.utc) + expires_delta,
     }
